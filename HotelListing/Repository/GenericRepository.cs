@@ -37,7 +37,10 @@ namespace HotelListing.Repository
 
             if (includes != null)
             {
-                includes.ForEach(i => query.Include(i));
+                foreach (string property in includes)
+                {
+                    query = query.Include(property);
+                }
             }
 
             return await query.AsNoTracking().FirstOrDefaultAsync(expression);
