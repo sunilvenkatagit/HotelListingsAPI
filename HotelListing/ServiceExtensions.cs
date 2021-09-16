@@ -1,9 +1,14 @@
 ﻿using HotelListing.Data;
+using HotelListing.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +36,6 @@ namespace HotelListing
             //})
             //.AddEntityFrameworkStores<DatabaseContext>().AddDefaultTokenProviders();
         }
-
         public static void ConfigureJWT(this IServiceCollection services, IConfiguration configuration)
         {
             var jwtSettings = configuration.GetSection("Jwt");
@@ -54,6 +58,29 @@ namespace HotelListing
                     ValidIssuer = jwtSettings.GetSection("Issuer").Value,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
                 };
+            });
+        }
+        public static void ConfigureExceptionHanlder(this IApplicationBuilder app)
+        {
+            app.UseExceptionHandler(options =>
+            {
+                options.Run(async context =>
+                {
+                    context.Response.ContentType = "application/json";
+
+                    var errorContextFeature = context.Features.Get<IExceptionHandlerFeature>();
+                    if (errorContextFeature != null)
+                    {
+                        Log.Error($"Something went wrong in the {errorContextFeature.Error}");
+
+                        await context.Response.WriteAsync(new Error
+                        {
+                            StatusCode = StatusCodes.Status500InternalServerError,
+                            Message = "Internal Server Error. Please try again later!"
+                        }
+                        .ToString());
+                    }
+                });
             });
         }
     }

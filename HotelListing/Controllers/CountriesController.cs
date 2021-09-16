@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace HotelListing.Controllers
@@ -29,37 +28,27 @@ namespace HotelListing.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCountries()
+        public async Task<IActionResult> GetCountries([FromQuery] RequestParams requestParams)
         {
-            try
-            {
-                var countries = await _unitOfWork.Countries.GetAll();
-                var results = _mapper.Map<IList<CountryDto>>(countries);
-                return Ok(results);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Something went wrong in the {nameof(GetCountries)}");
-                return StatusCode(500, "Internal Server Error. Please try again later!");
-            }
+            var countries = await _unitOfWork.Countries.GetAll(requestParams);
+            var results = _mapper.Map<IList<CountryDto>>(countries);
+            return Ok(results);
         }
 
         [HttpGet(template: "{id:int}", Name = "GetCountry")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCountry(int id)
         {
-            try
+            var country = await _unitOfWork.Countries.Get(q => q.Id == id, new List<string> { "Hotels" });
+            if (country == null)
             {
-                var country = await _unitOfWork.Countries.Get(q => q.Id == id, new List<string> { "Hotels" });
-                var result = _mapper.Map<CountryDto>(country);
-                return Ok(result);
+                _logger.LogError($"No country exists with an id: {id}");
+                return NotFound($"No country exists with an id: {id}");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Something went wrong in the {nameof(GetCountry)}");
-                return StatusCode(500, "Internal Server Error. Please try again later!");
-            }
+            var result = _mapper.Map<CountryDto>(country);
+            return Ok(result);
         }
 
         [Authorize(Roles = "Administrator")]
@@ -76,19 +65,11 @@ namespace HotelListing.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                var country = _mapper.Map<Country>(countryDto);
-                await _unitOfWork.Countries.Insert(country);
-                await _unitOfWork.Save();
+            var country = _mapper.Map<Country>(countryDto);
+            await _unitOfWork.Countries.Insert(country);
+            await _unitOfWork.Save();
 
-                return CreatedAtRoute("GetCountry", new { id = country.Id }, country);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Something went wrong in the {nameof(CreateCountry)}");
-                return StatusCode(500, "Internal Server Error. Please try again later!");
-            }
+            return CreatedAtRoute("GetCountry", new { id = country.Id }, country);
         }
 
         [Authorize]
@@ -106,28 +87,20 @@ namespace HotelListing.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
+            var country = await _unitOfWork.Countries.Get(q => q.Id == id);
+            if (country == null)
             {
-                var country = await _unitOfWork.Countries.Get(q => q.Id == id);
-                if (country == null)
-                {
-                    _logger.LogError($"No country exists with an id: {id}");
-                    return NotFound(ModelState);
-                }
-
-                // Do not do this for updating/PUT - read the method description from Intelisense
-                // _mapper.Map<Country>(countryDto);
-                _mapper.Map(countryDto, country);
-                _unitOfWork.Countries.Update(country);
-                await _unitOfWork.Save();
-
-                return NoContent();
+                _logger.LogError($"No country exists with an id: {id}");
+                return NotFound(ModelState);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Something went wrong in the {nameof(UpdateCountry)}");
-                return StatusCode(500, "Internal Server Error. Please try again later!");
-            }
+
+            // Do not do this for updating/PUT - read the method description from Intelisense
+            // _mapper.Map<Country>(countryDto);
+            _mapper.Map(countryDto, country);
+            _unitOfWork.Countries.Update(country);
+            await _unitOfWork.Save();
+
+            return NoContent();
         }
 
         [Authorize(Roles = "Administrator")]
@@ -144,24 +117,16 @@ namespace HotelListing.Controllers
                 return BadRequest("Submited data is invalid");
             }
 
-            try
+            var hotel = await _unitOfWork.Countries.Get(q => q.Id == id);
+            if (hotel == null)
             {
-                var hotel = await _unitOfWork.Countries.Get(q => q.Id == id);
-                if (hotel == null)
-                {
-                    _logger.LogError($"No hotel exists with an id: {id}");
-                    return NotFound(ModelState);
-                }
-                await _unitOfWork.Countries.Delete(id);
-                await _unitOfWork.Save();
+                _logger.LogError($"No hotel exists with an id: {id}");
+                return NotFound(ModelState);
+            }
+            await _unitOfWork.Countries.Delete(id);
+            await _unitOfWork.Save();
 
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Something went wrong in the {nameof(DeleteCountry)}");
-                return StatusCode(500, "Internal Server Error. Please try again later!");
-            }
+            return NoContent();
         }
     }
 }
