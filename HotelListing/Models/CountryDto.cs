@@ -3,12 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HotelListing.Models
 {
-    public class CountryDto : CreateCountryDto
-    {
-        public int Id { get; set; }
-        public IList<HotelDto> Hotels { get; set; }
-    }
-
     public class CreateCountryDto
     {
         [Required]
@@ -18,5 +12,16 @@ namespace HotelListing.Models
         [Required]
         [StringLength(maximumLength: 2, MinimumLength = 2, ErrorMessage = "Short Country name is too long")]
         public string ShortName { get; set; }
+    }
+
+    public class UpdateCountryDto : CreateCountryDto
+    {
+        public IList<CreateHotelDto> Hotels { get; set; }
+    }
+
+    public class CountryDto : CreateCountryDto
+    {
+        public int Id { get; set; }
+        public IList<HotelDto> Hotels { get; set; }
     }
 }
