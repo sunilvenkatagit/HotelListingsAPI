@@ -27,6 +27,8 @@ namespace HotelListing.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCountries([FromQuery] RequestParams requestParams)
         {
             var countries = await _unitOfWork.Countries.GetAll(requestParams);
@@ -72,7 +74,7 @@ namespace HotelListing.Controllers
         }
 
         [Authorize]
-        [HttpPut("{id:int}")]
+        [HttpPut(template: "{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -103,7 +105,7 @@ namespace HotelListing.Controllers
         }
 
         [Authorize(Roles = "Administrator")]
-        [HttpDelete("{id:int}")]
+        [HttpDelete(template: "{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -1,5 +1,7 @@
-﻿using HotelListing.Data;
+﻿using AspNetCoreRateLimit;
+using HotelListing.Data;
 using HotelListing.Models;
+using Marvin.Cache.Headers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -12,9 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace HotelListing
 {
@@ -92,6 +92,41 @@ namespace HotelListing
                 options.AssumeDefaultVersionWhenUnspecified = true;
                 options.DefaultApiVersion = new ApiVersion(1, 0);
             });
+        }
+        public static void ConfigureHttpCacheHeaders(this IServiceCollection services)
+        {
+            services.AddResponseCaching();
+            services.AddHttpCacheHeaders(
+                (expirationOpt) =>
+                {
+                    expirationOpt.MaxAge = 120;
+                    expirationOpt.CacheLocation = CacheLocation.Private;
+                },
+                (validationOpt) =>
+                {
+                    validationOpt.MustRevalidate = true;
+                }
+                );
+        }
+        public static void ConfigureRateLimiting(this IServiceCollection services)
+        {
+            var rateLimitRules = new List<RateLimitRule>
+            {
+                new RateLimitRule
+                {
+                    Endpoint = "*",
+                    Limit= 100,
+                    Period = "60s"
+                }
+            };
+            services.Configure<IpRateLimitOptions>(opt =>
+            {
+                opt.GeneralRules = rateLimitRules;
+            });
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+            services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
         }
     }
 }

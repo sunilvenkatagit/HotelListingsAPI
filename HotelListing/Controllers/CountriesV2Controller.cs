@@ -12,13 +12,13 @@ namespace HotelListing.Controllers
     [Route("api/countries")] // versioning via query parameter
     //[Route("api/{v:apiversion}/countries")] // versioning via route URL
     [ApiController]
-    public class CountryV2Controller : ControllerBase
+    public class CountriesV2Controller : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<CountriesController> _logger;
         private readonly IMapper _mapper;
 
-        public CountryV2Controller(IUnitOfWork unitOfWork, ILogger<CountriesController> logger, IMapper mapper)
+        public CountriesV2Controller(IUnitOfWork unitOfWork, ILogger<CountriesController> logger, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;

@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace HotelListing.Controllers
@@ -34,7 +32,7 @@ namespace HotelListing.Controllers
         }
 
         [HttpPost]
-        [Route("register")]
+        [Route(template: "register")]
         [ProducesResponseType(StatusCodes.Status202Accepted)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -77,7 +75,7 @@ namespace HotelListing.Controllers
         }
 
         [HttpPost]
-        [Route("login")]
+        [Route(template: "login")]
         [ProducesResponseType(StatusCodes.Status202Accepted)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
